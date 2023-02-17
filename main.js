@@ -1,23 +1,63 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import { setupCounter } from './counter.js'
+const addBtn = document.getElementById('add')
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
+const notes = JSON.parse(localStorage.getItem('notes'))
+
+if(notes) {
+    notes.forEach(note => addNewNote(note))
+}
+
+addBtn.addEventListener('click', () => addNewNote())
+
+function addNewNote(text = '') {
+    const note = document.createElement('div')
+    note.classList.add('note')
+
+    note.innerHTML = `
+    <div class="tools">
+        <button class="edit"><i class="fas fa-edit"></i></button>
+        <button class="delete"><i class="fas fa-trash-alt"></i></button>
     </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
 
-setupCounter(document.querySelector('#counter'))
+    <div class="main ${text ? "" : "hidden"}"></div>
+    <textarea class="${text ? "hidden" : ""}"></textarea>
+    `
+
+    const editBtn = note.querySelector('.edit')
+    const deleteBtn = note.querySelector('.delete')
+    const main = note.querySelector('.main')
+    const textArea = note.querySelector('textarea')
+
+    textArea.value = text
+    main.innerHTML = marked(text)
+
+    deleteBtn.addEventListener('click', () => {
+        note.remove()
+
+        updateLS()
+    })
+
+    editBtn.addEventListener('click', () => {
+        main.classList.toggle('hidden')
+        textArea.classList.toggle('hidden')
+    })
+
+    textArea.addEventListener('input', (e) => {
+        const { value } = e.target
+
+        main.innerHTML = marked(value)
+
+        updateLS()
+    })
+
+    document.body.appendChild(note)
+}
+
+function updateLS() {
+    const notesText = document.querySelectorAll('textarea')
+
+    const notes = []
+
+    notesText.forEach(note => notes.push(note.value))
+
+    localStorage.setItem('notes', JSON.stringify(notes))
+}
